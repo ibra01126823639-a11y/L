@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>نظام الحياة — Life OS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #07080f;
+    --bg2: #0d0f1c;
+    --bg3: #131629;
+    --border: #1e2235;
+    --accent: #5865f2;
+    --green: #00d97e;
+    --red: #ff4560;
+    --yellow: #ffb800;
+    --cyan: #00c8ff;
+    --purple: #a855f7;
+    --text: #e2e4f0;
+    --muted: #4a4f6a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    min-height: 100vh;
+    direction: rtl;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.4;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(7,8,15,0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 4px;
+    padding: 10px 16px; overflow-x: auto;
+    flex-direction: row-reverse;
+  }
+  .nav-brand {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900; font-size: 16px;
+    color: var(--accent); letter-spacing: 1px;
+    margin-left: 12px; white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    background: transparent; border: 1px solid transparent;
+    color: var(--muted); padding: 6px 14px; border-radius: 8px;
+    cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 13px;
+    white-space: nowrap; transition: all .2s; flex-shrink: 0;
+    font-weight: 600;
+  }
+  .nav-btn:hover { color: var(--text); border-color: var(--border); }
+  .nav-btn.active { background: var(--bg3); border-color: var(--accent); color: var(--accent); }
+
+  /* PAGES */
+  .page { display: none; padding: 20px 16px; max-width: 860px; margin: 0 auto; }
+  .page.active { display: block; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SECTION HEADER */
+  .sec-head {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Cairo', sans-serif; font-weight: 900;
+    font-size: 20px; color: var(--text);
+    margin-bottom: 18px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 12px;
+  }
+  .card-label {
+    font-size: 11px; letter-spacing: 1px; color: var(--muted);
+    margin-bottom: 10px; font-weight: 700;
+  }
+
+  /* STAT GRID */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-box {
+    background: var(--bg2); border-radius: 10px; padding: 14px;
+    border: 1px solid var(--border);
+  }
+  .stat-box .lbl { font-size: 11px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+  .stat-box .val { font-family: 'Cairo', sans-serif; font-size: 24px; font-weight: 900; }
+  .stat-box .sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* PROGRESS */
+  .prog-wrap { background: var(--bg3); border-radius: 99px; height: 6px; margin: 8px 0; }
+  .prog-bar { height: 6px; border-radius: 99px; transition: width .5s; }
+
+  .big-prog {
+    text-align: center; padding: 28px 20px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; margin-bottom: 14px;
+    position: relative; overflow: hidden;
+  }
+  .big-prog::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(88,101,242,0.08), transparent 70%);
+  }
+  .big-prog .pct {
+    font-family: 'Cairo', sans-serif; font-size: 72px; font-weight: 900;
+    line-height: 1; position: relative;
+  }
+  .big-prog .status-line { font-size: 14px; color: var(--muted); margin-top: 8px; position: relative; }
+  .big-prog .date-line { font-size: 12px; color: var(--muted); margin-top: 4px; opacity: 0.6; }
+
+  /* INPUTS */
+  input[type=text], input[type=number], input[type=time], textarea, select {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: 'Cairo', sans-serif; font-size: 14px;
+    padding: 9px 12px; width: 100%;
+    outline: none; transition: border-color .2s;
+    direction: rtl;
+  }
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 65px; }
+  .field { margin-bottom: 10px; }
+  .field label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 600; }
+
+  /* BUTTONS */
+  .btn {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 8px 16px;
+    cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 13px;
+    transition: all .2s; font-weight: 600;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-accent:hover { background: #4752c4; border-color: #4752c4; color: #fff; }
+  .btn-green { border-color: var(--green); color: var(--green); }
+  .btn-green:hover { background: #00d97e15; }
+  .btn-red { border-color: var(--red); color: var(--red); }
+  .btn-red:hover { background: #ff456015; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  /* INLINE ROW */
+  .ql-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .ql-row label { font-size: 12px; color: var(--muted); width: 130px; flex-shrink: 0; font-weight: 600; }
+  .ql-row input { flex: 1; }
+
+  /* TABLE */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tbl th {
+    background: var(--bg3); color: var(--muted); font-size: 11px;
+    text-align: right; padding: 9px 12px;
+    border-bottom: 1px solid var(--border); font-weight: 700;
+  }
+  .tbl td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .tbl tr:hover td { background: var(--bg3); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 99px;
+    font-size: 11px; font-weight: 700;
+  }
+  .badge-green { background: #00d97e20; color: var(--green); border: 1px solid #00d97e44; }
+  .badge-red { background: #ff456020; color: var(--red); border: 1px solid #ff456044; }
+  .badge-yellow { background: #ffb80020; color: var(--yellow); border: 1px solid #ffb80044; }
+  .badge-blue { background: #5865f220; color: var(--accent); border: 1px solid #5865f244; }
+  .badge-gray { background: #4a4f6a20; color: var(--muted); border: 1px solid var(--border); }
+
+  /* TIMER */
+  .timer-display {
+    font-family: 'Cairo', sans-serif; font-size: 64px; font-weight: 900;
+    text-align: center; letter-spacing: 4px; padding: 20px 0;
+    transition: color .3s; direction: ltr;
+  }
+
+  /* RANGE */
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: var(--border); border-radius: 99px; border: none; padding: 0;
+    direction: ltr;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+
+  /* BOOK CARD */
+  .book-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin-bottom: 10px;
+    transition: border-color .2s;
+  }
+  .book-card.active-book { border-color: var(--accent); }
+  .book-title { font-family: 'Cairo', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+
+  /* AI BOX */
+  .ai-box {
+    background: var(--bg3); border: 1px solid var(--accent);
+    border-radius: 10px; padding: 14px; margin-top: 12px;
+    font-size: 14px; line-height: 2; color: var(--text);
+    white-space: pre-wrap; display: none;
+  }
+  .ai-box.visible { display: block; animation: fadeIn .3s ease; }
+
+  /* ALERT */
+  .alert {
+    border-radius: 10px; padding: 12px 16px; font-size: 13px;
+    margin-bottom: 12px; border: 1px solid; line-height: 1.8; font-weight: 600;
+  }
+  .alert-red { background: #ff456010; border-color: #ff456040; color: #ff8090; }
+  .alert-green { background: #00d97e10; border-color: #00d97e40; color: #00d97e; }
+  .alert-yellow { background: #ffb80010; border-color: #ffb80040; color: var(--yellow); }
+
+  /* EXERCISE BUTTON */
+  .ex-btn {
+    background: var(--bg3); border: 1px solid var(--border);
+    color: var(--text); border-radius: 8px; padding: 11px 14px;
+    cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 13px;
+    transition: all .2s; text-align: right; width: 100%; margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px; font-weight: 600;
+  }
+  .ex-btn:hover { border-color: var(--green); color: var(--green); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  .scroll-box { max-height: 280px; overflow-y: auto; }
+  .scroll-box::-webkit-scrollbar { width: 4px; }
+  .scroll-box::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* STREAK FIRE */
+  .streak-fire { font-size: 32px; display: block; margin-bottom: 4px; }
+
+  @media (max-width: 480px) {
+    .stat-grid { grid-template-columns: 1fr; }
+    .big-prog .pct { font-size: 56px; }
+    .timer-display { font-size: 48px; }
+    nav { padding: 8px 10px; }
+  }
+
+  /* ══ AuralIQ — listening tracker styles ══ */
+  .aq-wrap { position: relative; }
+  .aq-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .aq-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .aq-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  @media(max-width:700px){ .aq-grid-2,.aq-grid-3,.aq-grid-4 { grid-template-columns:1fr; } }
+  @media(max-width:900px){ .aq-grid-4 { grid-template-columns:repeat(2,1fr); } .aq-grid-3 { grid-template-columns:repeat(2,1fr); } }
+
+  .aq-tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; scrollbar-width:none; margin-bottom:18px; }
+  .aq-tabs::-webkit-scrollbar { display:none; }
+  .aq-tab { font-size:13px; font-weight:600; padding:10px 14px; cursor:pointer; color:var(--muted); border-bottom:2px solid transparent; transition:all .25s; white-space:nowrap; user-select:none; }
+  .aq-tab:hover { color:var(--text); }
+  .aq-tab.active { color:var(--cyan); border-bottom-color:var(--cyan); }
+
+  .aq-panel { display:none; animation:fadeIn .3s ease; }
+  .aq-panel.active { display:block; }
+
+  .aq-card { background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:12px; position:relative; overflow:hidden; }
+  .aq-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--border),transparent); }
+  .aq-card-title { font-size:11px; font-weight:700; color:var(--muted); margin-bottom:10px; letter-spacing:.5px; }
+  .aq-card-value { font-size:34px; font-weight:900; letter-spacing:-2px; line-height:1; margin-bottom:4px; }
+  .aq-card-sub { font-size:12px; color:var(--muted); }
+
+  .aq-motivation { background:linear-gradient(135deg,rgba(0,200,255,.08),rgba(0,217,126,.06)); border:1px solid rgba(0,200,255,.2); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .aq-motiv-emoji { font-size:24px; margin-bottom:6px; }
+  .aq-motiv-text { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .aq-motiv-sub { font-size:12px; color:var(--muted); line-height:1.6; }
+
+  .aq-level-bar-wrap { background:var(--bg3); border-radius:4px; height:5px; overflow:hidden; margin-top:9px; }
+  .aq-level-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--cyan),var(--green)); transition:width .8s cubic-bezier(.34,1.56,.64,1); }
+
+  .aq-chain-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-top:10px; }
+  .aq-chain-day { aspect-ratio:1; border-radius:6px; background:var(--bg3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:8px; color:var(--muted); flex-direction:column; gap:2px; transition:all .3s; }
+  .aq-chain-day.done { background:rgba(0,217,126,.1); border-color:rgba(0,217,126,.3); color:var(--green); }
+  .aq-chain-day.today { border-color:var(--cyan); box-shadow:0 0 0 1px var(--cyan); }
+  .aq-chain-day.shadow-done { background:linear-gradient(135deg,rgba(0,217,126,.12),rgba(168,85,247,.12)); border-color:rgba(168,85,247,.4); }
+  .aq-chain-dot { width:4px; height:4px; border-radius:50%; background:var(--green); }
+
+  .aq-chart-wrap { position:relative; height:140px; margin-top:10px; }
+
+  .aq-form-section { background:var(--bg3); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:10px; }
+  .aq-form-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:4px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .aq-form-desc { font-size:12px; color:var(--muted); margin-bottom:12px; line-height:1.7; }
+
+  .aq-choice-group { display:flex; gap:8px; flex-wrap:wrap; }
+  .aq-choice-btn { flex:1; min-width:90px; padding:10px 12px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; cursor:pointer; text-align:center; transition:all .2s; color:var(--muted); font-family:inherit; font-size:13px; font-weight:600; }
+  .aq-choice-btn:hover { border-color:var(--accent); color:var(--text); }
+  .aq-choice-btn.selected-easy { background:rgba(255,69,96,.12); border-color:var(--red); color:var(--red); }
+  .aq-choice-btn.selected-ideal { background:rgba(0,217,126,.12); border-color:var(--green); color:var(--green); }
+  .aq-choice-btn.selected-hard { background:rgba(255,184,0,.12); border-color:var(--yellow); color:var(--yellow); }
+
+  .aq-slider-wrap { margin-top:4px; }
+  .aq-slider-labels { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-bottom:8px; }
+  .aq-slider-value { text-align:center; font-size:30px; font-weight:900; letter-spacing:-2px; color:var(--cyan); margin-bottom:10px; }
+  .aq-slider-value.green { color:var(--green); }
+  .aq-slider-value.yellow { color:var(--yellow); }
+
+  input[type="range"].aq-range { width:100%; -webkit-appearance:none; height:4px; background:var(--bg); border-radius:2px; outline:none; cursor:pointer; }
+  input[type="range"].aq-range::-webkit-slider-thumb { -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:var(--cyan); border:2px solid var(--bg); box-shadow:0 0 0 2px var(--cyan); cursor:pointer; transition:transform .1s; }
+  input[type="range"].aq-range::-webkit-slider-thumb:hover { transform:scale(1.2); }
+
+  .aq-toggle-group { display:flex; gap:8px; }
+  .aq-toggle-btn { flex:1; padding:10px; background:var(--bg2); border:1px solid var(--border); border-radius:10px; cursor:pointer; text-align:center; transition:all .2s; color:var(--muted); font-family:inherit; font-size:13px; font-weight:600; }
+  .aq-toggle-btn.selected-yes { background:rgba(0,217,126,.12); border-color:var(--green); color:var(--green); }
+  .aq-toggle-btn.selected-no { background:rgba(255,69,96,.1); border-color:rgba(255,69,96,.4); color:var(--red); }
+
+  .aq-btn-primary { width:100%; padding:14px; background:linear-gradient(135deg,var(--cyan),rgba(0,180,220,.8)); border:none; border-radius:12px; color:#07080f; font-family:inherit; font-size:15px; font-weight:800; cursor:pointer; transition:all .25s; }
+  .aq-btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,200,255,.25); }
+
+  .aq-btn-secondary { padding:8px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-family:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .aq-btn-secondary:hover { border-color:var(--accent); color:var(--text); }
+
+  .aq-section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:8px; }
+  .aq-section-title { font-size:17px; font-weight:900; }
+
+  .aq-empty { text-align:center; padding:36px 16px; color:var(--muted); font-size:13px; }
+  .aq-empty-icon { font-size:32px; margin-bottom:10px; }
+
+  .aq-session-item { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:13px; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+  .aq-session-date { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); white-space:nowrap; min-width:48px; }
+  .aq-session-metrics { display:flex; gap:9px; flex-wrap:wrap; flex:1; }
+  .aq-session-metric { display:flex; flex-direction:column; gap:2px; }
+  .aq-session-metric-label { font-size:10px; color:var(--muted); font-weight:600; }
+  .aq-session-metric-value { font-size:13px; font-weight:800; }
+  .aq-session-badges { display:flex; gap:5px; flex-wrap:wrap; align-items:center; }
+
+  .aq-review-item { background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:13px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+  .aq-review-due { font-size:11px; font-weight:600; padding:3px 8px; border-radius:16px; white-space:nowrap; }
+  .aq-due-now { background:rgba(255,69,96,.14); color:var(--red); border:1px solid rgba(255,69,96,.3); }
+  .aq-due-soon { background:rgba(255,184,0,.14); color:var(--yellow); border:1px solid rgba(255,184,0,.3); }
+  .aq-due-later { background:rgba(0,200,255,.1); color:var(--cyan); border:1px solid rgba(0,200,255,.2); }
+
+  .aq-badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:16px; font-size:11px; font-weight:600; }
+  .aq-badge-up { background:rgba(0,217,126,.12); color:var(--green); border:1px solid rgba(0,217,126,.2); }
+  .aq-badge-neutral { background:rgba(0,200,255,.1); color:var(--cyan); border:1px solid rgba(0,200,255,.2); }
+
+  .aq-speed-meter { display:flex; align-items:center; gap:10px; margin-top:6px; }
+  .aq-speed-number { font-size:40px; font-weight:900; letter-spacing:-3px; color:var(--yellow); line-height:1; width:66px; }
+  .aq-speed-bars { display:flex; gap:3px; align-items:flex-end; height:36px; }
+  .aq-speed-bar { width:6px; border-radius:2px 2px 0 0; background:var(--bg3); transition:all .4s; }
+
+  .aq-modal-overlay { position:fixed; inset:0; background:rgba(7,8,15,.92); backdrop-filter:blur(10px); z-index:9999; display:none; align-items:center; justify-content:center; padding:20px; }
+  .aq-modal-overlay.show { display:flex; animation:fadeIn .25s ease; }
+  .aq-modal { background:var(--bg2); border:1px solid var(--border); border-radius:18px; padding:26px; max-width:460px; width:100%; max-height:90vh; overflow-y:auto; position:relative; }
+  .aq-modal-close { position:absolute; left:14px; top:14px; width:28px; height:28px; background:var(--bg3); border:1px solid var(--border); border-radius:7px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; color:var(--muted); }
+  .aq-modal-close:hover { color:var(--text); border-color:var(--accent); }
+  .aq-modal-title { font-size:19px; font-weight:900; margin-bottom:2px; }
+  .aq-modal-sub { font-size:11px; color:var(--muted); margin-bottom:18px; }
+  .aq-weekly-stat { display:flex; align-items:center; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--border); }
+  .aq-weekly-stat:last-child { border-bottom:none; }
+  .aq-weekly-stat-label { font-size:13px; color:var(--muted); font-weight:600; }
+  .aq-weekly-stat-value { font-size:17px; font-weight:900; }
+
+  .aq-toast { position:fixed; bottom:20px; left:20px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--text); z-index:99999; transform:translateY(70px); opacity:0; transition:all .35s cubic-bezier(.34,1.56,.64,1); max-width:270px; }
+  .aq-toast.show { transform:translateY(0); opacity:1; }
+
+  .aq-input-text { width:100%; padding:10px 12px; background:var(--bg3); border:1px solid var(--border); border-radius:9px; color:var(--text); font-family:inherit; font-size:13px; outline:none; transition:border-color .2s; }
+  .aq-input-text:focus { border-color:var(--cyan); }
+  .aq-input-text::placeholder { color:var(--muted); }
+
+  .aq-weekly-btn { display:flex; align-items:center; gap:7px; padding:7px 14px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-family:inherit; font-size:12px; font-weight:600; color:var(--muted); transition:all .2s; margin-bottom:14px; }
+  .aq-weekly-btn:hover { border-color:var(--cyan); color:var(--cyan); }
+
+  .aq-mb14 { margin-bottom:14px; } .aq-mb10 { margin-bottom:10px; } .aq-mt10 { margin-top:10px; } .aq-mt16 { margin-top:16px; }
+  .aq-accent-cyan { color:var(--cyan); } .aq-accent-green { color:var(--green); } .aq-accent-yellow { color:var(--yellow); } .aq-accent-purple { color:var(--purple); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">🧠 نظام الحياة</div>
+  <button class="nav-btn active" onclick="showPage('dashboard', this)">🏠 لوحة القيادة</button>
+  <button class="nav-btn" onclick="showPage('books', this)">📚 الكتب</button>
+  <button class="nav-btn" onclick="showPage('english', this)">🎧 الإنجليزي</button>
+  <button class="nav-btn" onclick="showPage('focus', this)">🎯 التركيز</button>
+  <button class="nav-btn" onclick="showPage('planche', this)">🏋️ البلانش</button>
+  <button class="nav-btn" onclick="showPage('coach', this)">🤖 المدرب</button>
+</nav>
+
+<!-- ══ لوحة القيادة ══════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+
+  <div class="big-prog">
+    <div class="pct" id="dash-pct" style="color:#ff4560">0%</div>
+    <div style="max-width:320px;margin:10px auto 0">
+      <div class="prog-wrap">
+        <div class="prog-bar" id="dash-bar" style="width:0%;background:#ff4560"></div>
+      </div>
+    </div>
+    <div class="status-line">الحالة اليومية: <strong id="dash-status">ضعيف 🔻</strong></div>
+    <div class="date-line" id="dash-date"></div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="lbl">🚫 سلسلة NoFap</div>
+      <div class="val" id="nofap-val" style="color:var(--purple)">0 يوم</div>
+      <div class="sub" id="nofap-sub">لم تبدأ بعد</div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="startNofap()" id="nofap-start-btn" style="width:100%;margin-top:8px">🚀 ابدأ الآن</button>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <div class="lbl">😴 النوم</div>
+      <div class="val" id="sleep-val" style="color:#60a5fa;font-size:18px">—</div>
+      <div class="sub" id="wake-val">الاستيقاظ: —</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">🎯 التركيز</div>
+      <div class="val" id="focus-val" style="color:var(--yellow)">0 دقيقة</div>
+      <div class="sub" id="distract-val">0 مشتتات</div>
+    </div>
+  </div>
+
+  <!-- تسجيل سريع -->
+  <div class="card">
+    <div class="card-label">⚡ تسجيل سريع</div>
+
+    <div class="ql-row">
+      <label>وقت النوم</label>
+      <input type="time" id="ql-sleep" oninput="qlSave()"/>
+    </div>
+    <div class="ql-row">
+      <label>وقت الاستيقاظ</label>
+      <input type="time" id="ql-wake" oninput="qlSave()"/>
+    </div>
+  </div>
+
+  <!-- أكبر إنجاز -->
+  <div class="card">
+    <div class="card-label">🏆 أكبر إنجاز اليوم</div>
+    <textarea id="achievement-text" placeholder="اكتب أفضل شيء حققته اليوم..." oninput="qlSave()"></textarea>
+  </div>
+
+  <!-- أكبر مشكلة -->
+  <div class="card">
+    <div class="card-label">⚠️ أكبر مشكلة حالية</div>
+    <textarea id="problem-text" placeholder="ما هي أكبر عقبة تواجهها الآن؟" oninput="qlSave()"></textarea>
+  </div>
+
+  <!-- زر الانتكاسة -->
+  <div id="relapse-section" style="display:none;margin-top:4px">
+    <button class="btn btn-red" onclick="logRelapse()" style="width:100%;padding:13px;font-size:14px">
+      ⚠️ تسجيل انتكاسة — يعيد العداد للصفر
+    </button>
+  </div>
+
+</div>
+
+<!-- ══ الكتب ══════════════════════════════════════════════ -->
+<div class="page" id="page-books">
+  <div class="sec-head"><span>📚</span> إتقان الكتب</div>
+
+  <div class="alert alert-red">
+    ⚠️ قاعدة صارمة: لا يمكنك الانتقال لكتاب جديد قبل تطبيق الكتاب الحالي فعلياً
+  </div>
+
+  <div class="btn-row" style="margin-bottom:14px">
+    <button class="btn btn-accent" onclick="toggleAddBook()">+ إضافة كتاب</button>
+  </div>
+
+  <!-- نموذج إضافة كتاب -->
+  <div class="card" id="add-book-form" style="display:none">
+    <div class="card-label">كتاب جديد</div>
+    <div class="field"><label>اسم الكتاب</label><input type="text" id="nb-title" placeholder="عنوان الكتاب"/></div>
+    <div class="field"><label>إجمالي الساعات</label><input type="number" id="nb-total" placeholder="مثال: 12"/></div>
+    <div class="field"><label>الساعات المتبقية</label><input type="number" id="nb-remain" placeholder="مثال: 10"/></div>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="addBook()">إضافة</button>
+      <button class="btn" onclick="toggleAddBook()">إلغاء</button>
+    </div>
+  </div>
+
+  <div id="books-list"></div>
+
+  <!-- نسخ للمدرب -->
+  <div class="card" style="border-color:rgba(88,101,242,.3);">
+    <div class="card-label">📋 اختبر فهمك مع المدرب</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.8;">انسخ بيانات كتبك وأرسلها لكلود ليختبر فهمك ويعطيك تغذية راجعة</p>
+    <button class="btn btn-accent" onclick="copyBooksReport()" style="width:100%;padding:11px">📋 انسخ تقرير الكتب للمدرب</button>
+    <div id="books-copy-status" style="text-align:center;margin-top:8px;font-size:12px;color:var(--green);display:none;">✅ تم النسخ!</div>
+  </div>
+</div>
+
+<!-- ══ الإنجليزي ══════════════════════════════════════════ -->
+<div class="page" id="page-english">
+  <div class="sec-head"><span>🎧</span> تتبع مهارة الاستماع — AuralIQ</div>
+
+  <!-- Weekly Summary button -->
+  <button class="aq-weekly-btn" onclick="aqOpenWeekly()">📊 الملخص الأسبوعي</button>
+
+  <!-- ── Tabs ── -->
+  <div class="aq-tabs">
+    <div class="aq-tab active" onclick="aqSwitchTab('dashboard',this)">الرئيسية</div>
+    <div class="aq-tab" onclick="aqSwitchTab('log',this)">تسجيل جلسة</div>
+    <div class="aq-tab" onclick="aqSwitchTab('progress',this)">التقدم</div>
+    <div class="aq-tab" onclick="aqSwitchTab('review',this)">المراجعة</div>
+    <div class="aq-tab" onclick="aqSwitchTab('history',this)">السجل</div>
+  </div>
+
+  <!-- ══ Dashboard Panel ══ -->
+  <div class="aq-panel active" id="aq-panel-dashboard">
+    <div class="aq-motivation">
+      <div class="aq-motiv-emoji" id="aq-motiv-emoji">🎧</div>
+      <div class="aq-motiv-text" id="aq-motiv-text">ابدأ رحلة تدريب الاستماع اليوم!</div>
+      <div class="aq-motiv-sub" id="aq-motiv-sub">سجّل أول جلسة لك لرؤية تقدمك</div>
+    </div>
+
+    <div class="aq-grid-4 aq-mb14">
+      <div class="aq-card">
+        <div class="aq-card-title">سلسلة الأيام</div>
+        <div class="aq-card-value aq-accent-yellow" id="aq-stat-streak">0</div>
+        <div class="aq-card-sub">🔥 يوم متتالي</div>
+        <div class="aq-level-bar-wrap aq-mt16"><div class="aq-level-bar-fill" id="aq-streak-bar" style="width:0%"></div></div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">نسبة الفهم</div>
+        <div class="aq-card-value aq-accent-cyan" id="aq-stat-understanding">—</div>
+        <div class="aq-card-sub">آخر جلسة</div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">الاسترجاع الفعّال</div>
+        <div class="aq-card-value aq-accent-green" id="aq-stat-recall">—</div>
+        <div class="aq-card-sub">آخر جلسة</div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">سلسلة المحاكاة</div>
+        <div class="aq-card-value aq-accent-purple" id="aq-stat-shadow">0</div>
+        <div class="aq-card-sub">🎙 يوم</div>
+      </div>
+    </div>
+
+    <div class="aq-grid-2 aq-mb14">
+      <div class="aq-card">
+        <div class="aq-card-title">مستوى الكفاءة</div>
+        <div id="aq-level-name" style="font-size:16px;font-weight:900;margin-bottom:7px;">🌱 مبتدئ</div>
+        <div class="aq-level-bar-wrap"><div class="aq-level-bar-fill" id="aq-level-bar" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:10px;color:var(--muted)">مبتدئ</span>
+          <span style="font-size:10px;color:var(--muted)">شبه أصيل</span>
+        </div>
+        <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)" id="aq-level-xp">0 XP</div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">راحة السرعة</div>
+        <div class="aq-speed-meter">
+          <div class="aq-speed-number" id="aq-stat-speed">—</div>
+          <div class="aq-speed-bars" id="aq-speed-bars">
+            <div class="aq-speed-bar" style="height:20%"></div><div class="aq-speed-bar" style="height:30%"></div>
+            <div class="aq-speed-bar" style="height:40%"></div><div class="aq-speed-bar" style="height:55%"></div>
+            <div class="aq-speed-bar" style="height:65%"></div><div class="aq-speed-bar" style="height:75%"></div>
+            <div class="aq-speed-bar" style="height:85%"></div><div class="aq-speed-bar" style="height:90%"></div>
+            <div class="aq-speed-bar" style="height:95%"></div><div class="aq-speed-bar" style="height:100%"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:8px;">/ 10 مقياس الراحة</div>
+      </div>
+    </div>
+
+    <div class="aq-grid-3 aq-mb14">
+      <div class="aq-card">
+        <div class="aq-card-title">الانتظام الأسبوعي</div>
+        <div class="aq-card-value aq-accent-cyan" id="aq-stat-consistency">—</div>
+        <div class="aq-level-bar-wrap aq-mt10"><div class="aq-level-bar-fill" id="aq-consistency-bar" style="width:0%"></div></div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">التحسن الأسبوعي</div>
+        <div class="aq-card-value" id="aq-stat-weekly">—</div>
+        <div id="aq-weekly-badge-wrap" style="margin-top:6px;"></div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">أفضل جلسة</div>
+        <div class="aq-card-value aq-accent-yellow" id="aq-best-session" style="font-size:24px;">—</div>
+        <div style="font-size:12px;color:var(--muted)">فهم</div>
+      </div>
+    </div>
+
+    <div class="aq-card aq-mb14">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:7px;">
+        <div>
+          <div class="aq-card-title">لا تكسر السلسلة</div>
+          <div style="font-size:13px;font-weight:700;">آخر 28 يومًا</div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);display:flex;gap:9px;flex-wrap:wrap;">
+          <span><span style="display:inline-block;width:8px;height:8px;background:rgba(0,217,126,.3);border-radius:2px;margin-inline-end:4px;"></span>تمرين</span>
+          <span><span style="display:inline-block;width:8px;height:8px;background:rgba(168,85,247,.3);border-radius:2px;margin-inline-end:4px;"></span>+ محاكاة</span>
+        </div>
+      </div>
+      <div class="aq-chain-grid" id="aq-chain-grid"></div>
+    </div>
+  </div>
+
+  <!-- ══ Log Panel ══ -->
+  <div class="aq-panel" id="aq-panel-log">
+    <div class="aq-form-section">
+      <div class="aq-form-title">📋 معلومات الجلسة</div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">اسم الجلسة / المحتوى</label>
+        <input type="text" class="aq-input-text" id="aq-session-name" placeholder="مثال: بودكاست BBC، محاضرة TED..."/>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:700;color:var(--muted);display:block;margin-bottom:6px;">المدة (دقائق)</label>
+        <input type="number" class="aq-input-text" id="aq-session-duration" placeholder="20" min="1" max="240"/>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">🎯 مستوى الصعوبة (i+1)</div>
+      <div class="aq-form-desc">منطقة «تحدٍّ مع فهم» هي أفضل مكان للتعلم الحقيقي.</div>
+      <div class="aq-choice-group">
+        <div class="aq-choice-btn" id="aq-level-easy" onclick="aqSelectLevel('easy')">😴 سهل جدًا</div>
+        <div class="aq-choice-btn" id="aq-level-ideal" onclick="aqSelectLevel('ideal')">⚡ تحدٍّ مع فهم</div>
+        <div class="aq-choice-btn" id="aq-level-hard" onclick="aqSelectLevel('hard')">🧠 صعب جدًا</div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">👂 نسبة الفهم الاستماعي</div>
+      <div class="aq-form-desc">كم فهمت بشكل عام؟</div>
+      <div class="aq-slider-value"><span id="aq-understanding-val">75</span>%</div>
+      <div class="aq-slider-wrap">
+        <input type="range" class="aq-range" id="aq-understanding-slider" min="0" max="100" value="75"
+          oninput="document.getElementById('aq-understanding-val').textContent=this.value;aqUpdateSlider(this,'#00c8ff')">
+        <div class="aq-slider-labels"><span>لا شيء</span><span>النصف</span><span>كل شيء</span></div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">🧪 درجة الاسترجاع الفعّال</div>
+      <div class="aq-form-desc">دون إعادة الاستماع — كم من المحتوى تستطيع تذكّره؟</div>
+      <div class="aq-slider-value green"><span id="aq-recall-val">50</span>%</div>
+      <div class="aq-slider-wrap">
+        <input type="range" class="aq-range" id="aq-recall-slider" min="0" max="100" value="50"
+          oninput="document.getElementById('aq-recall-val').textContent=this.value;aqUpdateSlider(this,'#00d97e')">
+        <div class="aq-slider-labels"><span>لا شيء</span><span>النصف</span><span>كل شيء</span></div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">⚡ مستوى راحة السرعة</div>
+      <div class="aq-form-desc">كم كنت مرتاحًا مع سرعة الكلام؟</div>
+      <div class="aq-slider-value yellow"><span id="aq-speed-val">5</span>/10</div>
+      <div class="aq-slider-wrap">
+        <input type="range" class="aq-range" id="aq-speed-slider" min="1" max="10" value="5"
+          oninput="document.getElementById('aq-speed-val').textContent=this.value;aqUpdateSlider(this,'#ffb800')">
+        <div class="aq-slider-labels"><span>بطيء جدًا</span><span>طبيعي</span><span>سرعة أصيل</span></div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">🎙 تمرين المحاكاة الصوتية</div>
+      <div class="aq-form-desc">المحاكاة تُزامن جهازك الكلامي مع أنماط الناطقين الأصليين.</div>
+      <div class="aq-toggle-group">
+        <div class="aq-toggle-btn" id="aq-shadow-yes" onclick="aqSelectShadow('yes')">✅ نعم، مارستُ المحاكاة</div>
+        <div class="aq-toggle-btn" id="aq-shadow-no" onclick="aqSelectShadow('no')">❌ ليس اليوم</div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">🔁 التمرين المتعمّد</div>
+      <div class="aq-form-desc">إعادة الأجزاء الصعبة هو أقوى مؤشر للتحسّن.</div>
+      <div class="aq-toggle-group">
+        <div class="aq-toggle-btn" id="aq-deliberate-yes" onclick="aqSelectDeliberate('yes')">✅ كرّرتُ الأجزاء الصعبة</div>
+        <div class="aq-toggle-btn" id="aq-deliberate-no" onclick="aqSelectDeliberate('no')">❌ استمعتُ مرة واحدة</div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">🃏 حفظ للمراجعة المتباعدة</div>
+      <div class="aq-form-desc">هل كانت الجلسة تحدٍّ؟ أضفها للمراجعة بعد 1 و3 و7 أيام.</div>
+      <div class="aq-toggle-group">
+        <div class="aq-toggle-btn" id="aq-srs-yes" onclick="aqSelectSRS('yes')">📌 أضف لقائمة المراجعة</div>
+        <div class="aq-toggle-btn" id="aq-srs-no" onclick="aqSelectSRS('no')">تخطّ</div>
+      </div>
+    </div>
+
+    <div class="aq-form-section">
+      <div class="aq-form-title">💬 ملاحظات الجلسة</div>
+      <div class="aq-form-desc">ما الذي كان صعبًا؟ أي مفردات جديدة؟</div>
+      <textarea class="aq-input-text" id="aq-session-notes" rows="3" placeholder="لكنات صعبة، مفردات جديدة..."></textarea>
+    </div>
+
+    <button class="aq-btn-primary" onclick="aqLogSession()">✦ حفظ الجلسة</button>
+  </div>
+
+  <!-- ══ Progress Panel ══ -->
+  <div class="aq-panel" id="aq-panel-progress">
+    <div class="aq-section-header">
+      <div>
+        <div class="aq-section-title">تقدّمك</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">تصوير ذكي لمؤشرات الأداء</div>
+      </div>
+      <select id="aq-chart-range" onchange="aqRenderCharts()" style="background:var(--bg3);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:7px;font-family:inherit;font-size:12px;outline:none;cursor:pointer;">
+        <option value="7">آخر 7 أيام</option>
+        <option value="14">آخر 14 يومًا</option>
+        <option value="30">آخر 30 يومًا</option>
+      </select>
+    </div>
+    <div class="aq-card aq-mb14">
+      <div class="aq-card-title">نسبة الفهم عبر الزمن</div>
+      <div class="aq-chart-wrap"><canvas id="aq-chart-understanding"></canvas></div>
+    </div>
+    <div class="aq-card aq-mb14">
+      <div class="aq-card-title">نسبة الاسترجاع عبر الزمن</div>
+      <div class="aq-chart-wrap"><canvas id="aq-chart-recall"></canvas></div>
+    </div>
+    <div class="aq-grid-3">
+      <div class="aq-card">
+        <div class="aq-card-title">إجمالي الجلسات</div>
+        <div class="aq-card-value aq-accent-cyan" id="aq-total-sessions">0</div>
+        <div class="aq-card-sub">مسجّلة</div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">إجمالي الوقت</div>
+        <div class="aq-card-value aq-accent-green" id="aq-total-time" style="font-size:22px;">0د</div>
+        <div class="aq-card-sub">تدرّبتَ</div>
+      </div>
+      <div class="aq-card">
+        <div class="aq-card-title">أفضل جلسة</div>
+        <div class="aq-card-value aq-accent-yellow" id="aq-best-session2" style="font-size:24px;">—</div>
+        <div class="aq-card-sub">فهم</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SRS Review Panel ══ -->
+  <div class="aq-panel" id="aq-panel-review">
+    <div class="aq-section-header">
+      <div>
+        <div class="aq-section-title">قائمة المراجعة المتباعدة</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">التكرار المتباعد لتثبيت عميق</div>
+      </div>
+      <button class="aq-btn-secondary" onclick="aqSwitchTab('log')">+ تسجيل جلسة</button>
+    </div>
+    <div class="aq-motivation" style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(0,200,255,.05));border-color:rgba(168,85,247,.2);">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px;">🧠 كيف يعمل التكرار المتباعد؟</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.7;">مراجعة المادة الصعبة على فترات متزايدة (1←3←7 أيام) يُرسّخ التشفير العميق. كل استرجاع ناجح يُقوّي الاحتفاظ طويل المدى.</div>
+    </div>
+    <div id="aq-srs-list">
+      <div class="aq-empty"><div class="aq-empty-icon">📭</div>لا توجد جلسات في القائمة بعد.<br>حدّد جلسات للمراجعة عند التسجيل.</div>
+    </div>
+  </div>
+
+  <!-- ══ History Panel ══ -->
+  <div class="aq-panel" id="aq-panel-history">
+    <div class="aq-section-header">
+      <div class="aq-section-title">سجل الجلسات</div>
+      <div style="display:flex;gap:7px;">
+        <button class="aq-btn-secondary" onclick="aqReplayTest()">🔁 اختبار استرجاع</button>
+        <button class="aq-btn-secondary" onclick="aqExportData()">⬇ تصدير</button>
+      </div>
+    </div>
+    <div id="aq-history-list">
+      <div class="aq-empty"><div class="aq-empty-icon">📂</div>لا توجد جلسات مسجّلة بعد.</div>
+    </div>
+  </div>
+
+</div><!-- /page-english -->
+
+<!-- ══ التركيز ════════════════════════════════════════════ -->
+<div class="page" id="page-focus">
+  <div class="sec-head"><span>🎯</span> تتبع التركيز</div>
+
+  <div class="card">
+    <div class="timer-display" id="timer-display" style="color:var(--muted)">00:00</div>
+    <div class="btn-row" style="justify-content:center">
+      <button class="btn btn-green" id="timer-btn" onclick="toggleTimer()">▶ ابدأ</button>
+      <button class="btn" onclick="endSession()" id="end-btn" style="display:none">✓ إنهاء الجلسة</button>
+    </div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="lbl">التركيز اليوم</div>
+      <div class="val" id="focus-today" style="color:var(--yellow)">0 دقيقة</div>
+      <div class="sub">الهدف: 60 دقيقة</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">المشتتات</div>
+      <div class="val" id="distract-today" style="color:var(--red)">0</div>
+      <div class="sub">اليوم</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">تسجيل مشتت</div>
+    <button class="btn btn-red" onclick="logDistraction()" style="width:100%;margin-bottom:12px;padding:11px">
+      + تسجيل مشتت
+    </button>
+    <div class="field">
+      <label>ماذا شتّت انتباهك؟ (كن صادقاً)</label>
+      <textarea id="distract-reason" placeholder="الموبايل؟ الملل؟ القلق؟ كن محدداً..."></textarea>
+    </div>
+    <button class="btn" onclick="copyDistractionToClaud()" style="width:100%">📋 انسخ للمدرب (كلود)</button>
+    <div id="distract-copy-status" style="text-align:center;margin-top:8px;font-size:12px;color:var(--green);display:none;">✅ تم النسخ!</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">💡 قاعدة الـ 10 ثواني</div>
+    <div style="font-size:13px;color:var(--muted);line-height:2">
+      قبل أي فتح للموبايل أو السوشيال ميديا — توقف 10 ثواني واسأل نفسك:<br>
+      <strong style="color:var(--text)">هل هذا قرار واعٍ أم مجرد عادة؟</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ══ البلانش ════════════════════════════════════════════ -->
+<div class="page" id="page-planche">
+  <div class="sec-head"><span>🏋️</span> تدريب البلانش</div>
+
+  <div class="stat-grid">
+    <div class="stat-box">
+      <div class="lbl">المستوى</div>
+      <div class="val" style="color:var(--purple);font-size:18px">مبتدئ</div>
+    </div>
+    <div class="stat-box">
+      <div class="lbl">حالة اليوم</div>
+      <div class="val" id="planche-status" style="color:var(--red);font-size:16px">لا تدريب</div>
+      <div class="sub" id="planche-count">0 جلسات اليوم</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">سجّل تمريناتك</div>
+    <button class="ex-btn" onclick="logExercise('تهيئة الرسغ')">✓ تهيئة الرسغ — Wrist Conditioning</button>
+    <button class="ex-btn" onclick="logExercise('ميل البلانش')">✓ ميل البلانش — Planche Lean</button>
+    <button class="ex-btn" onclick="logExercise('تمرين الضغط الزائف')">✓ تمرين الضغط الزائف — Pseudo Planche Push-ups</button>
+    <button class="ex-btn" onclick="logExercise('ثبات الوضع المطوي')">✓ ثبات الوضع المطوي — Tuck Hold</button>
+    <button class="ex-btn" onclick="logExercise('رفع الكتفين')">✓ رفع الكتفين — Shoulder Shrugs</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="card-label" style="margin:0">نصيحة للمدرب</div>
+      <button class="btn" onclick="copyPlancheToClaud()">📋 انسخ للمدرب</button>
+    </div>
+    <div style="color:var(--muted);font-size:13px;line-height:2;">انسخ بيانات جلساتك وأرسلها لكلود للحصول على اقتراح تمرين مخصص.</div>
+    <div id="planche-copy-status" style="text-align:center;margin-top:8px;font-size:12px;color:var(--green);display:none;">✅ تم النسخ!</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">آخر الجلسات</div>
+    <div class="scroll-box">
+      <table class="tbl">
+        <thead><tr><th>التمرين</th><th>التاريخ</th></tr></thead>
+        <tbody id="planche-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ المدرب الذكي ══════════════════════════════════════ -->
+<div class="page" id="page-coach">
+  <div class="sec-head"><span>🤖</span> المدرب الذكي — Gemini</div>
+
+  <!-- أسئلة جاهزة -->
+  <div class="card">
+    <div class="card-label">أسئلة جاهزة</div>
+    <button class="ex-btn" onclick="askCoach('حلّل تقدمي الحالي بصدق. اشرح لي لماذا أداؤه على هذا المستوى وما الذي يجب تغييره فوراً.')">← حلّل تقدمي — كن صريحاً</button>
+    <button class="ex-btn" onclick="askCoach('لماذا أستمر في الانتكاسة؟ أعطني السبب النفسي الحقيقي وراء هذا النمط وخطة عملية واضحة للتوقف.')">← لماذا أنتكس باستمرار؟</button>
+    <button class="ex-btn" onclick="askCoach('أعطني بروتوكول طوارئ للتركيز أقدر أستخدمه الآن فوراً. خطوات محددة وليست نصائح عامة.')">← بروتوكول طوارئ للتركيز</button>
+    <button class="ex-btn" onclick="askCoach('ما هو أكبر ضعف عندي بناءً على بياناتي؟ اشرح لماذا هو ضعف وكيف أصلحه هذا الأسبوع تحديداً.')">← ما أكبر ضعف عندي؟</button>
+    <button class="ex-btn" onclick="askCoach('أشعر بالرغبة في الاستسلام. حفّزني بدون مجاملة — أخبرني لماذا يجب أن أكمل.')">← حفّزني — أشعر بالاستسلام</button>
+    <button class="ex-btn" onclick="askCoach('أعطني روتين يوم مثالي مبني على حالتي الحالية. كل ساعة محددة بنشاط واضح.')">← روتين اليوم المثالي لحالتي</button>
+  </div>
+
+  <!-- سؤال مخصص -->
+  <div class="card">
+    <div class="card-label">اسأل المدرب أي شيء</div>
+    <div class="field">
+      <textarea id="coach-input" placeholder="اكتب سؤالك هنا..." rows="3"></textarea>
+    </div>
+    <button class="btn btn-accent" onclick="askCoachCustom()" style="width:100%;padding:12px;font-size:14px;font-weight:800;">
+      🤖 اسأل المدرب
+    </button>
+  </div>
+
+  <!-- رد المدرب -->
+  <div class="card" id="coach-response-card" style="display:none;border-color:rgba(88,101,242,.4);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:18px;">🤖</span>
+      <div class="card-label" style="margin:0;color:var(--accent);">رد المدرب</div>
+      <div id="coach-loading" style="display:none;font-size:12px;color:var(--muted);">يفكر...</div>
+    </div>
+    <div id="coach-result" style="font-size:14px;line-height:2.2;color:var(--text);white-space:pre-wrap;"></div>
+  </div>
+
+  <!-- معاينة التقرير -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div class="card-label" style="margin:0">📋 بيانات اليوم المُرسَلة للمدرب</div>
+      <button class="btn" onclick="toggleReportPreview()" id="preview-btn" style="font-size:12px;padding:5px 12px;">عرض</button>
+    </div>
+    <div id="report-preview" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:12px;color:var(--muted);line-height:2;white-space:pre-wrap;direction:rtl;font-family:'Cairo',sans-serif;max-height:300px;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<script>
+// ── الحالة ──────────────────────────────────────────────
+const KEY = 'lifeos_ar_v1';
+
+function defaultState() {
+  return {
+    nofap: { startDate: null },
+
+    sleep: { sleep: '', wake: '' },
+    focus: { todayMins: 0, distractions: 0 },
+    english: { todayMins: 0, level: 'ضعيف' },
+    planche: { sessions: [] },
+    books: [],
+    achievement: '',
+    problem: '',
+    lastDate: today()
+  };
+}
+
+let S = (() => {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return defaultState();
+    return { ...defaultState(), ...JSON.parse(raw) };
+  } catch { return defaultState(); }
+})();
+
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} }
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function todayAr() {
+  return new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// إعادة تعيين العدادات اليومية
+if (S.lastDate !== today()) {
+  S.focus.todayMins = 0;
+  S.focus.distractions = 0;
+  S.english.todayMins = 0;
+
+  S.lastDate = today();
+  save();
+}
+
+// ── التنقل ──────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  renderAll();
+}
+
+// ── الرسم ───────────────────────────────────────────────
+function renderAll() {
+  renderDashboard();
+  renderBooks();
+  renderEnglish();
+  renderFocus();
+  renderPlanche();
+}
+
+function calcProgress() {
+  let s = 0;
+  const streak = nofapStreak();
+  if (streak > 0) s += Math.min(streak * 3, 25);
+
+  if (S.sleep.sleep && S.sleep.wake) s += 10;
+  if (S.english.todayMins >= 20) s += 15;
+  if (S.focus.todayMins >= 60) s += 20;
+  if (S.planche.sessions.filter(x => x.date === today()).length > 0) s += 15;
+  return Math.min(s, 100);
+}
+
+function nofapStreak() {
+  if (!S.nofap.startDate) return 0;
+  return Math.floor((new Date(today()) - new Date(S.nofap.startDate)) / 86400000);
+}
+
+function renderDashboard() {
+  const p = calcProgress();
+  const col = p >= 70 ? '#00d97e' : p >= 40 ? '#ffb800' : '#ff4560';
+  const status = p >= 70 ? 'قوي 💪' : p >= 40 ? 'متوسط ⚡' : 'ضعيف 🔻';
+
+  document.getElementById('dash-pct').textContent = p + '%';
+  document.getElementById('dash-pct').style.color = col;
+  document.getElementById('dash-bar').style.width = p + '%';
+  document.getElementById('dash-bar').style.background = col;
+  document.getElementById('dash-status').textContent = status;
+  document.getElementById('dash-date').textContent = todayAr();
+
+  const streak = nofapStreak();
+  document.getElementById('nofap-val').textContent = streak + ' يوم';
+  document.getElementById('nofap-sub').textContent = S.nofap.startDate ? 'منذ ' + S.nofap.startDate : 'لم تبدأ بعد';
+  document.getElementById('nofap-start-btn').style.display = S.nofap.startDate ? 'none' : 'block';
+  document.getElementById('relapse-section').style.display = S.nofap.startDate ? 'block' : 'none';
+
+
+
+  document.getElementById('sleep-val').textContent = S.sleep.sleep || '—';
+  document.getElementById('wake-val').textContent = 'الاستيقاظ: ' + (S.sleep.wake || '—');
+  document.getElementById('focus-val').textContent = S.focus.todayMins + ' دقيقة';
+  document.getElementById('distract-val').textContent = S.focus.distractions + ' مشتتات';
+
+
+  document.getElementById('ql-sleep').value = S.sleep.sleep;
+  document.getElementById('ql-wake').value = S.sleep.wake;
+  document.getElementById('achievement-text').value = S.achievement || '';
+  document.getElementById('problem-text').value = S.problem || '';
+}
+
+function qlSave() {
+
+  S.sleep.sleep = document.getElementById('ql-sleep').value;
+  S.sleep.wake = document.getElementById('ql-wake').value;
+  S.achievement = document.getElementById('achievement-text').value;
+  S.problem = document.getElementById('problem-text').value;
+  save(); renderDashboard();
+}
+
+function startNofap() {
+  S.nofap.startDate = today();
+  save(); renderDashboard();
+}
+
+function logRelapse() {
+  if (confirm('تسجيل انتكاسة؟ سيُعاد العداد من اليوم.')) {
+    S.nofap.startDate = today();
+    save(); renderDashboard();
+  }
+}
+
+// ── الكتب ───────────────────────────────────────────────
+function toggleAddBook() {
+  const f = document.getElementById('add-book-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function addBook() {
+  const title = document.getElementById('nb-title').value.trim();
+  if (!title) { alert('أدخل اسم الكتاب'); return; }
+  S.books.push({
+    id: Date.now(),
+    title,
+    totalHours: parseFloat(document.getElementById('nb-total').value) || 0,
+    remainingHours: parseFloat(document.getElementById('nb-remain').value) || 0,
+    understanding: 0,
+    applied: false,
+    coreIdea: '',
+    application: '',
+    addedDate: today()
+  });
+  save();
+  document.getElementById('nb-title').value = '';
+  document.getElementById('nb-total').value = '';
+  document.getElementById('nb-remain').value = '';
+  toggleAddBook();
+  renderBooks();
+}
+
+let activeTestBookIdx = null; // متغير احتياطي — غير مستخدم
+
+function renderBooks() {
+  const container = document.getElementById('books-list');
+  if (S.books.length === 0) {
+    container.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px">لا توجد كتب بعد. أضف أول كتاب.</div>';
+    return;
+  }
+  container.innerHTML = S.books.map((book, i) => {
+    const daysEst = book.remainingHours ? Math.ceil(book.remainingHours) : '؟';
+    return `
+    <div class="book-card ${book.applied ? 'active-book' : ''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:8px">
+        <div class="book-title" style="flex:1">${book.title}</div>
+        <span class="badge ${book.applied ? 'badge-green' : 'badge-gray'}">${book.applied ? 'مُطبَّق ✓' : 'لم يُطبَّق'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--muted)">الفهم</div>
+          <div style="font-size:20px;font-weight:900;color:var(--accent)">${book.understanding}%</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--muted)">متبقي</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text)">${book.remainingHours}س</div>
+        </div>
+        <div style="background:var(--bg3);border-radius:6px;padding:8px;text-align:center">
+          <div style="font-size:10px;color:var(--muted)">أيام متبقية</div>
+          <div style="font-size:18px;font-weight:700;color:var(--text)">${daysEst}</div>
+        </div>
+      </div>
+      <label style="font-size:11px;color:var(--muted);font-weight:600">نسبة الفهم %</label>
+      <input type="range" min="0" max="100" value="${book.understanding}" oninput="updateBook(${i},'understanding',this.value)" style="margin:6px 0 14px"/>
+      <div class="field">
+        <label>💡 الفكرة الأساسية للكتاب (جملة واحدة)</label>
+        <textarea rows="2" placeholder="ما هي الفكرة الجوهرية التي يتحدث عنها هذا الكتاب؟" oninput="updateBook(${i},'coreIdea',this.value)">${book.coreIdea}</textarea>
+      </div>
+      <div class="field">
+        <label>🎯 كيف ستطبق هذا اليوم؟</label>
+        <textarea rows="2" placeholder="كن محدداً — ماذا ستفعل اليوم بناءً على ما تعلمته؟" oninput="updateBook(${i},'application',this.value)">${book.application}</textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-green" onclick="toggleApplied(${i})">${book.applied ? '✅ مُطبَّق' : 'تأشير كمُطبَّق'}</button>
+        <button class="btn btn-red" onclick="removeBook(${i})" style="margin-right:auto">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateBook(i, key, val) {
+  S.books[i][key] = key === 'understanding' ? parseInt(val) : val;
+  save();
+  if (key === 'understanding') renderBooks();
+}
+
+function toggleApplied(i) {
+  S.books[i].applied = !S.books[i].applied;
+  save(); renderBooks();
+}
+
+function removeBook(i) {
+  if (confirm('حذف هذا الكتاب؟')) { S.books.splice(i, 1); save(); renderBooks(); }
+}
+
+// ── Gemini API ────────────────────────────────────────────
+const GEMINI_KEY = 'AIzaSyAt3E9QJDNuclt_LUsHiLYXMnna447Btmc';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+
+async function callGemini(prompt) {
+  let res;
+  try {
+    res = await fetch(GEMINI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
+      })
+    });
+  } catch (networkErr) {
+    throw new Error('فشل الاتصال بالإنترنت: ' + networkErr.message);
+  }
+
+  let data;
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error('HTTP ' + res.status + ' — الرد غير صالح');
+  }
+
+  if (!res.ok) {
+    const msg = data?.error?.message || 'HTTP ' + res.status;
+    throw new Error(msg);
+  }
+
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    const reason = data?.candidates?.[0]?.finishReason || JSON.stringify(data).slice(0, 200);
+    throw new Error('لا يوجد نص في الرد: ' + reason);
+  }
+
+  return text;
+}
+
+const COACH_SYSTEM = `أنت مدرب حياة ذكي وصارم. تحصل على تقرير يومي شامل عن المستخدم.
+قواعد ردك:
+- اشرح دائماً لماذا — لا تعطِ نصائح عامة بدون سبب
+- أعطِ خطوات عملية محددة وليست مجردة
+- كن صريحاً وصادقاً — لا مجاملة
+- ردك باللغة العربية فقط
+- أقل من 250 كلمة ما لم يُطلب خطة مفصلة`;
+
+async function askCoach(question) {
+  const report = buildDailyReport();
+  const prompt = `${COACH_SYSTEM}\n\n${report}\n\n❓ سؤال المستخدم:\n${question}`;
+  showCoachLoading();
+  try {
+    const result = await callGemini(prompt);
+    showCoachResult(result);
+  } catch (e) {
+    showCoachResult('❌ ' + e.message);
+  }
+}
+
+async function askCoachCustom() {
+  const q = document.getElementById('coach-input')?.value?.trim();
+  if (!q) { alert('اكتب سؤالك أولاً'); return; }
+  await askCoach(q);
+}
+
+function showCoachLoading() {
+  const card = document.getElementById('coach-response-card');
+  const loading = document.getElementById('coach-loading');
+  const result = document.getElementById('coach-result');
+  card.style.display = 'block';
+  loading.style.display = 'inline';
+  result.textContent = '';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showCoachResult(text) {
+  document.getElementById('coach-loading').style.display = 'none';
+  document.getElementById('coach-result').textContent = text;
+}
+
+// ── بناء التقرير اليومي ───────────────────────────────────
+function buildDailyReport() {
+  const streak = nofapStreak();
+  const todayPlanche = S.planche.sessions.filter(x => x.date === today());
+  const plancheList = todayPlanche.length
+    ? todayPlanche.map(s => `  • ${s.exercise}`).join('\n')
+    : '  • لا تدريب اليوم';
+
+  const booksList = S.books.length
+    ? S.books.map(b => `  • ${b.title} — فهم: ${b.understanding}% — ${b.applied ? 'مُطبَّق ✓' : 'لم يُطبَّق'}`).join('\n')
+    : '  • لا كتب مضافة';
+
+  const aqSessions = (() => {
+    try {
+      const d = JSON.parse(localStorage.getItem('auraliq_data') || '{}');
+      const sessions = d.sessions || [];
+      const todaySess = sessions.find(s => new Date(s.date).toDateString() === new Date().toDateString());
+      if (todaySess) return `  • فهم: ${todaySess.understanding}% | استذكار: ${todaySess.recall}% | سرعة: ${todaySess.speed}/10 | محاكاة: ${todaySess.shadowed ? 'نعم' : 'لا'}`;
+      return '  • لا جلسة استماع اليوم';
+    } catch { return '  • لا بيانات'; }
+  })();
+
+  return `🧠 تقرير نظام الحياة — ${todayAr()}
+${'─'.repeat(40)}
+
+🚫 NoFap:
+  • السلسلة: ${streak} يوم
+  • تاريخ البداية: ${S.nofap.startDate || 'لم تبدأ'}
+
+😴 النوم:
+  • وقت النوم: ${S.sleep.sleep || '—'}
+  • وقت الاستيقاظ: ${S.sleep.wake || '—'}
+
+🎯 التركيز:
+  • دقائق التركيز: ${S.focus.todayMins} دقيقة
+  • المشتتات: ${S.focus.distractions}
+  • سبب المشتتات: ${document.getElementById('distract-reason')?.value || 'لم يذكر'}
+
+🎧 الاستماع الإنجليزي:
+${aqSessions}
+
+📚 الكتب:
+${booksList}
+
+🏋️ البلانش:
+${plancheList}
+
+🏆 أكبر إنجاز اليوم:
+  ${S.achievement || 'لم يذكر'}
+
+⚠️ أكبر مشكلة حالية:
+  ${S.problem || 'لم يذكر'}
+
+${'─'.repeat(40)}`;
+}
+
+function toggleReportPreview() {
+  const preview = document.getElementById('report-preview');
+  const btn = document.getElementById('preview-btn');
+  if (preview.style.display === 'none') {
+    preview.style.display = 'block';
+    preview.textContent = buildDailyReport();
+    btn.textContent = 'إخفاء';
+  } else {
+    preview.style.display = 'none';
+    btn.textContent = 'عرض';
+  }
+}
+
+// ── نسخ للمدرب (التركيز والبلانش والكتب) ─────────────────
+function copyDistractionToClaud() {
+  const reason = document.getElementById('distract-reason')?.value || 'لم يذكر';
+  const text = `سجّلت ${S.focus.distractions} مشتت اليوم.\nالسبب: ${reason}\nدقائق التركيز: ${S.focus.todayMins}\n\nحلّل السبب النفسي الحقيقي وأعطني حلاً عملياً واحداً.`;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('distract-copy-status');
+    if (el) { el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+  });
+}
+
+function copyPlancheToClaud() {
+  const todaySess = S.planche.sessions.filter(x => x.date === today());
+  const allSess = [...S.planche.sessions].reverse().slice(0, 10);
+  const text = `بيانات تدريب البلانش:\nجلسات اليوم: ${todaySess.length}\nآخر 10 جلسات:\n${allSess.map(s => `• ${s.exercise} — ${s.date}`).join('\n')}\n\nاقترح لي تمريناً مناسباً للجلسة القادمة مع عدد التكرارات والمجموعات.`;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('planche-copy-status');
+    if (el) { el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+  });
+}
+
+function copyBooksReport() {
+  const booksList = S.books.length
+    ? S.books.map((b, i) => `${i+1}. "${b.title}"\n   - الفهم: ${b.understanding}%\n   - الفكرة: ${b.coreIdea || 'لم يذكر'}\n   - التطبيق: ${b.application || 'لم يذكر'}\n   - الحالة: ${b.applied ? 'مُطبَّق ✓' : 'لم يُطبَّق'}`).join('\n\n')
+    : 'لا كتب مضافة';
+  const text = `📚 تقرير الكتب:\n\n${booksList}\n\nاختبرني بسؤال تحليلي عن أحد هذه الكتب وقيّم مستوى فهمي.`;
+  navigator.clipboard.writeText(text).then(() => {
+    const el = document.getElementById('books-copy-status');
+    if (el) { el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 3000); }
+  });
+}
+
+// ── الإنجليزي ───────────────────────────────────────────
+function engSave() {
+  const minsEl = document.getElementById('eng-mins');
+  if (minsEl) S.english.todayMins = parseInt(minsEl.value) || 0;
+  save();
+}
+
+function setLevel(l) {
+  S.english.level = l; save();
+}
+
+function renderEnglish() {
+  // العناصر القديمة أُزيلت — لا شيء يُرسم هنا
+}
+
+// ── تهيئة ────────────────────────────────────────────────
+renderAll();
+let timerInterval = null;
+let timerSeconds = 0;
+let timerRunning = false;
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    document.getElementById('timer-btn').textContent = '▶ ابدأ';
+    document.getElementById('timer-btn').className = 'btn btn-green';
+    document.getElementById('timer-display').style.color = 'var(--muted)';
+    document.getElementById('end-btn').style.display = 'inline-block';
+  } else {
+    timerRunning = true;
+    document.getElementById('timer-btn').textContent = '⏸ إيقاف مؤقت';
+    document.getElementById('timer-btn').className = 'btn btn-red';
+    document.getElementById('timer-display').style.color = 'var(--yellow)';
+    timerInterval = setInterval(() => {
+      timerSeconds++;
+      const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const s = String(timerSeconds % 60).padStart(2, '0');
+      document.getElementById('timer-display').textContent = m + ':' + s;
+    }, 1000);
+  }
+}
+
+function endSession() {
+  clearInterval(timerInterval); timerRunning = false;
+  const mins = Math.floor(timerSeconds / 60);
+  if (mins > 0) { S.focus.todayMins += mins; save(); }
+  timerSeconds = 0;
+  document.getElementById('timer-display').textContent = '00:00';
+  document.getElementById('timer-display').style.color = 'var(--muted)';
+  document.getElementById('timer-btn').textContent = '▶ ابدأ';
+  document.getElementById('timer-btn').className = 'btn btn-green';
+  document.getElementById('end-btn').style.display = 'none';
+  renderFocus(); renderDashboard();
+}
+
+function logDistraction() {
+  S.focus.distractions++; save(); renderFocus(); renderDashboard();
+}
+
+function renderFocus() {
+  document.getElementById('focus-today').textContent = S.focus.todayMins + ' دقيقة';
+  document.getElementById('distract-today').textContent = S.focus.distractions;
+  document.getElementById('focus-val').textContent = S.focus.todayMins + ' دقيقة';
+  document.getElementById('distract-val').textContent = S.focus.distractions + ' مشتتات';
+}
+
+// ── البلانش ─────────────────────────────────────────────
+function logExercise(ex) {
+  S.planche.sessions.push({ exercise: ex, date: today(), ts: Date.now() });
+  save(); renderPlanche();
+}
+
+function renderPlanche() {
+  const todaySessions = S.planche.sessions.filter(s => s.date === today());
+  document.getElementById('planche-count').textContent = todaySessions.length + ' جلسات اليوم';
+  const statusEl = document.getElementById('planche-status');
+  if (todaySessions.length > 0) {
+    statusEl.textContent = 'نشط ✓';
+    statusEl.style.color = 'var(--green)';
+  } else {
+    statusEl.textContent = 'لا تدريب بعد';
+    statusEl.style.color = 'var(--red)';
+  }
+  const tbody = document.getElementById('planche-tbody');
+  const recent = [...S.planche.sessions].reverse().slice(0, 10);
+  tbody.innerHTML = recent.length
+    ? recent.map(s => `<tr><td>${s.exercise}</td><td style="color:var(--muted)">${s.date}</td></tr>`).join('')
+    : '<tr><td colspan="2" style="color:var(--muted);text-align:center">لا جلسات بعد</td></tr>';
+}
+
+// ── دوال النسخ للمدرب ────────────────────────────────────
+</script>
+
+<!-- ══ AuralIQ Modals ══ -->
+<div class="aq-modal-overlay" id="aq-weekly-modal">
+  <div class="aq-modal">
+    <div class="aq-modal-close" onclick="aqCloseModal('aq-weekly-modal')">✕</div>
+    <div style="font-size:24px;margin-bottom:6px;">📊</div>
+    <div class="aq-modal-title">الملخص الأسبوعي</div>
+    <div class="aq-modal-sub">تقرير هذا الأسبوع</div>
+    <div id="aq-weekly-modal-content"></div>
+    <button class="aq-btn-primary" style="margin-top:16px;" onclick="aqCloseModal('aq-weekly-modal')">حسنًا!</button>
+  </div>
+</div>
+
+<div class="aq-modal-overlay" id="aq-replay-modal">
+  <div class="aq-modal">
+    <div class="aq-modal-close" onclick="aqCloseModal('aq-replay-modal')">✕</div>
+    <div style="font-size:24px;margin-bottom:6px;">🔁</div>
+    <div class="aq-modal-title">اختبار الاسترجاع</div>
+    <div class="aq-modal-sub">تحدّي الذاكرة النشطة</div>
+    <div id="aq-replay-content"></div>
+    <button class="aq-btn-primary" style="margin-top:16px;" onclick="aqCloseModal('aq-replay-modal')">إغلاق</button>
+  </div>
+</div>
+
+<div class="aq-toast" id="aq-toast">
+  <span id="aq-toast-icon">✅</span>
+  <span id="aq-toast-text">تم الحفظ</span>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  AuralIQ — Listening Tracker (embedded in LifeOS)
+// ══════════════════════════════════════
+const AQ = {
+  sessions: [],
+  srsQueue: [],
+  currentLevel: null,
+  currentShadow: null,
+  currentDeliberate: null,
+  currentSRS: null
+};
+
+function aqSave() {
+  localStorage.setItem('auraliq_data', JSON.stringify({ sessions: AQ.sessions, srsQueue: AQ.srsQueue }));
+}
+
+function aqRenderAll() {
+  // لا تشتغل إلا لو عناصر الصفحة موجودة
+  if (!document.getElementById('aq-stat-streak')) return;
+  aqRenderDashboard();
+  aqRenderChain();
+  aqRenderSRS();
+  aqRenderHistory();
+  const prog = document.getElementById('aq-panel-progress');
+  if (prog && prog.classList.contains('active')) setTimeout(aqRenderCharts, 30);
+}
+
+function aqInit() {
+  try {
+    const d = JSON.parse(localStorage.getItem('auraliq_data') || '{}');
+    AQ.sessions = d.sessions || [];
+    AQ.srsQueue = d.srsQueue || [];
+  } catch(e) {}
+  aqRenderAll();
+}
+
+// شغّل بعد تحميل كل الصفحة
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', aqInit);
+} else {
+  aqInit();
+}
+
+// ── Tabs ──
+function aqSwitchTab(tab, btn) {
+  document.querySelectorAll('.aq-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.aq-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('aq-panel-' + tab).classList.add('active');
+  if (btn) { btn.classList.add('active'); }
+  else {
+    const tabs = ['dashboard','log','progress','review','history'];
+    const tabEls = document.querySelectorAll('.aq-tab');
+    const idx = tabs.indexOf(tab);
+    if (tabEls[idx]) tabEls[idx].classList.add('active');
+  }
+  if (tab === 'progress') setTimeout(aqRenderCharts, 50);
+  aqRenderAll();
+}
+
+// ── Form selectors ──
+function aqSelectLevel(v) {
+  AQ.currentLevel = v;
+  ['easy','ideal','hard'].forEach(x => {
+    const el = document.getElementById('aq-level-' + x);
+    if (el) el.className = 'aq-choice-btn' + (x === v ? ' selected-' + x : '');
+  });
+}
+function aqSelectShadow(v) {
+  AQ.currentShadow = v;
+  const y = document.getElementById('aq-shadow-yes'), n = document.getElementById('aq-shadow-no');
+  if (y) y.className = 'aq-toggle-btn' + (v === 'yes' ? ' selected-yes' : '');
+  if (n) n.className = 'aq-toggle-btn' + (v === 'no' ? ' selected-no' : '');
+}
+function aqSelectDeliberate(v) {
+  AQ.currentDeliberate = v;
+  const y = document.getElementById('aq-deliberate-yes'), n = document.getElementById('aq-deliberate-no');
+  if (y) y.className = 'aq-toggle-btn' + (v === 'yes' ? ' selected-yes' : '');
+  if (n) n.className = 'aq-toggle-btn' + (v === 'no' ? ' selected-no' : '');
+}
+function aqSelectSRS(v) {
+  AQ.currentSRS = v;
+  const y = document.getElementById('aq-srs-yes'), n = document.getElementById('aq-srs-no');
+  if (y) y.className = 'aq-toggle-btn' + (v === 'yes' ? ' selected-yes' : '');
+  if (n) n.className = 'aq-toggle-btn' + (v === 'no' ? ' selected-no' : '');
+}
+function aqUpdateSlider(el, color) {
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.background = `linear-gradient(to right,${color} ${pct}%,var(--bg) ${pct}%)`;
+}
+
+// ── Log Session ──
+function aqLogSession() {
+  const understanding = parseInt(document.getElementById('aq-understanding-slider').value);
+  const recall = parseInt(document.getElementById('aq-recall-slider').value);
+  const speed = parseInt(document.getElementById('aq-speed-slider').value);
+  const nameEl = document.getElementById('aq-session-name');
+  const durEl = document.getElementById('aq-session-duration');
+  const notesEl = document.getElementById('aq-session-notes');
+  const name = nameEl.value.trim() || `جلسة #${AQ.sessions.length + 1}`;
+  const duration = parseInt(durEl.value) || 20;
+  const notes = notesEl.value.trim();
+
+  const session = {
+    id: Date.now(), date: new Date().toISOString(), name, duration,
+    understanding, recall, speed,
+    inputLevel: AQ.currentLevel || 'ideal',
+    shadowed: AQ.currentShadow === 'yes',
+    deliberate: AQ.currentDeliberate === 'yes',
+    notes
+  };
+  AQ.sessions.unshift(session);
+
+  if (AQ.currentSRS === 'yes') {
+    const now = new Date();
+    [[1,'مراجعة 1 يوم'],[3,'مراجعة 3 أيام'],[7,'مراجعة 7 أيام']].forEach(([d, l]) => {
+      const due = new Date(now); due.setDate(due.getDate() + d);
+      AQ.srsQueue.push({ sessionId: session.id, name: session.name, date: session.date, dueDate: due.toISOString(), label: l, done: false });
+    });
+  }
+
+  aqSave(); aqRenderAll(); aqResetForm();
+  aqShowToast('✅', 'تم حفظ الجلسة! استمرّ هكذا!');
+  aqSwitchTab('dashboard');
+}
+
+function aqResetForm() {
+  ['aq-session-name','aq-session-duration','aq-session-notes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const uS = document.getElementById('aq-understanding-slider');
+  const rS = document.getElementById('aq-recall-slider');
+  const spS = document.getElementById('aq-speed-slider');
+  if (uS) { uS.value = 75; document.getElementById('aq-understanding-val').textContent = 75; uS.style.background = ''; }
+  if (rS) { rS.value = 50; document.getElementById('aq-recall-val').textContent = 50; rS.style.background = ''; }
+  if (spS) { spS.value = 5; document.getElementById('aq-speed-val').textContent = 5; spS.style.background = ''; }
+  AQ.currentLevel = null; AQ.currentShadow = null; AQ.currentDeliberate = null; AQ.currentSRS = null;
+  ['easy','ideal','hard'].forEach(x => { const el = document.getElementById('aq-level-' + x); if (el) el.className = 'aq-choice-btn'; });
+  ['shadow','deliberate','srs'].forEach(x => {
+    const y = document.getElementById('aq-' + x + '-yes'), n = document.getElementById('aq-' + x + '-no');
+    if (y) y.className = 'aq-toggle-btn';
+    if (n) n.className = 'aq-toggle-btn';
+  });
+}
+
+// ── Dashboard ──
+function aqRenderDashboard() {
+  if (!aqGetEl('aq-stat-streak')) return;
+  const sessions = AQ.sessions, last = sessions[0];
+  const streak = aqCalcStreak(sessions, s => new Date(s.date).toDateString());
+  const shadowStreak = aqCalcStreak(sessions.filter(s => s.shadowed), s => new Date(s.date).toDateString());
+
+  aqSetEl('aq-stat-streak', streak);
+  aqSetEl('aq-stat-shadow', shadowStreak);
+  const sb = document.getElementById('aq-streak-bar'); if (sb) sb.style.width = Math.min(streak * 10, 100) + '%';
+
+  if (last) {
+    aqSetEl('aq-stat-understanding', last.understanding + '%');
+    aqSetEl('aq-stat-recall', last.recall + '%');
+    aqSetEl('aq-stat-speed', last.speed);
+    aqRenderSpeedBars(last.speed);
+  } else {
+    ['aq-stat-understanding','aq-stat-recall','aq-stat-speed'].forEach(id => aqSetEl(id, '—'));
+  }
+
+  const avgU = sessions.length ? sessions.slice(0, 10).reduce((a, s) => a + s.understanding, 0) / Math.min(sessions.length, 10) : 0;
+  const { name, pct, xp } = aqGetLevel(avgU, sessions.length);
+  aqSetEl('aq-level-name', name);
+  const lb = document.getElementById('aq-level-bar'); if (lb) lb.style.width = pct + '%';
+  aqSetEl('aq-level-xp', xp + ' XP');
+
+  const weekS = aqGetThisWeek(sessions);
+  const cp = Math.round((weekS.length / 7) * 100);
+  aqSetEl('aq-stat-consistency', cp + '%');
+  const cb = document.getElementById('aq-consistency-bar'); if (cb) cb.style.width = cp + '%';
+
+  const prevW = aqGetPrevWeek(sessions);
+  const thisAvg = weekS.length ? aqAvg(weekS.map(s => s.understanding)) : null;
+  const prevAvg = prevW.length ? aqAvg(prevW.map(s => s.understanding)) : null;
+  const wEl = document.getElementById('aq-stat-weekly');
+  const bEl = document.getElementById('aq-weekly-badge-wrap');
+  if (wEl && thisAvg !== null && prevAvg !== null) {
+    const diff = Math.round(thisAvg - prevAvg);
+    wEl.textContent = (diff >= 0 ? '+' : '') + diff + '%';
+    wEl.style.color = diff >= 0 ? 'var(--green)' : 'var(--red)';
+    if (bEl) bEl.innerHTML = diff >= 0
+      ? '<span class="aq-badge aq-badge-up">↑ مقارنة بالأسبوع الماضي</span>'
+      : '<span class="aq-badge" style="background:rgba(255,69,96,.12);color:var(--red);border:1px solid rgba(255,69,96,.2)">↓ مقارنة بالأسبوع الماضي</span>';
+  } else if (wEl) { wEl.textContent = '—'; if (bEl) bEl.innerHTML = ''; }
+
+  const bestU = sessions.length ? Math.max(...sessions.map(s => s.understanding)) : null;
+  aqSetEl('aq-best-session', bestU !== null ? bestU + '%' : '—');
+  aqSetEl('aq-best-session2', bestU !== null ? bestU + '%' : '—');
+  aqSetEl('aq-total-sessions', sessions.length);
+  const totalMin = sessions.reduce((a, s) => a + (s.duration || 20), 0);
+  aqSetEl('aq-total-time', totalMin >= 60 ? Math.round(totalMin / 60) + 'س' : totalMin + 'د');
+
+  aqUpdateMotivation(sessions, streak, shadowStreak, cp);
+}
+
+function aqRenderSpeedBars(speed) {
+  const bars = document.getElementById('aq-speed-bars');
+  if (!bars) return;
+  Array.from(bars.children).forEach((b, i) => {
+    b.style.background = i < speed ? 'var(--yellow)' : 'var(--bg3)';
+    b.style.opacity = i < speed ? 1 : 0.3;
+  });
+}
+
+function aqGetLevel(avgU, count) {
+  const score = (avgU * .7) + (Math.min(count, 50) * .6);
+  const names = ['🌱 مبتدئ', '📈 متوسط', '🎯 متقدم', '⚡ شبه أصيل'];
+  if (score < 20) return { name: names[0], pct: (score / 20) * 25, xp: Math.round(score) };
+  if (score < 45) return { name: names[1], pct: 25 + ((score - 20) / 25) * 25, xp: Math.round(score) };
+  if (score < 70) return { name: names[2], pct: 50 + ((score - 45) / 25) * 25, xp: Math.round(score) };
+  return { name: names[3], pct: 75 + Math.min(((score - 70) / 30) * 25, 25), xp: Math.round(score) };
+}
+
+function aqUpdateMotivation(sessions, streak, shadowStreak, consistency) {
+  const em = document.getElementById('aq-motiv-emoji');
+  const tx = document.getElementById('aq-motiv-text');
+  const sb = document.getElementById('aq-motiv-sub');
+  if (!em || !tx || !sb) return;
+  if (!sessions.length) { em.textContent = '🎧'; tx.textContent = 'ابدأ رحلة تدريب الاستماع اليوم!'; sb.textContent = 'سجّل أول جلسة لك لرؤية تقدمك'; return; }
+  const r = sessions.slice(0, 3), recallAvg = aqAvg(r.map(s => s.recall)), uAvg = aqAvg(r.map(s => s.understanding));
+  if (streak >= 7) { em.textContent = '🔥'; tx.textContent = `سلسلة ${streak} أيام! الاستمرارية هي قوتك الخارقة!`; sb.textContent = `${streak} أيام متتالية · ${shadowStreak} أيام محاكاة`; }
+  else if (shadowStreak >= 3) { em.textContent = '🎙'; tx.textContent = 'المحاكاة الصوتية تبني إيقاعك الأصيل!'; sb.textContent = `${streak} أيام · ${shadowStreak} أيام محاكاة`; }
+  else if (recallAvg > 70) { em.textContent = '🧪'; tx.textContent = 'قدرة الاسترجاع لديك تتحسّن!'; sb.textContent = `متوسط الاسترجاع الأخير: ${Math.round(recallAvg)}٪`; }
+  else if (consistency >= 70) { em.textContent = '🚀'; tx.textContent = 'الاستمرارية تقود تقدّمك!'; sb.textContent = `${consistency}٪ انتظام في التمرين هذا الأسبوع`; }
+  else if (uAvg > 80) { em.textContent = '⚡'; tx.textContent = 'فهم مرتفع — حان وقت دفع سرعتك!'; sb.textContent = 'جرّب محتوى أسرع للبقاء في منطقة التحدي'; }
+  else { em.textContent = '💪'; tx.textContent = 'استمرّ — التحسّن يحدث!'; sb.textContent = 'الجهد اليومي يُعيد برمجة دماغك للاستماع'; }
+}
+
+// ── Chain ──
+function aqRenderChain() {
+  const grid = document.getElementById('aq-chain-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const today = new Date();
+  const days = ['ح','ن','ث','ر','خ','ج','س'];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today); d.setDate(today.getDate() - i);
+    const ds = d.toDateString();
+    const onDay = AQ.sessions.filter(s => new Date(s.date).toDateString() === ds);
+    const hasShadow = onDay.some(s => s.shadowed), isToday = ds === today.toDateString();
+    const el = document.createElement('div');
+    el.className = 'aq-chain-day';
+    if (onDay.length) { el.classList.add('done'); if (hasShadow) el.classList.add('shadow-done'); }
+    if (isToday) el.classList.add('today');
+    el.innerHTML = `<span>${days[d.getDay()]}</span>${onDay.length ? '<div class="aq-chain-dot"></div>' : ''}`;
+    el.title = d.toLocaleDateString() + (onDay.length ? ` · ${onDay.length} جلسة` : '');
+    grid.appendChild(el);
+  }
+}
+
+// ── Charts ──
+function aqRenderCharts() {
+  const rangeEl = document.getElementById('aq-chart-range');
+  const range = parseInt(rangeEl ? rangeEl.value : 7);
+  const sessions = [...AQ.sessions].reverse().slice(-range);
+  aqDrawChart('aq-chart-understanding', sessions, 'understanding', '#00c8ff', '%');
+  aqDrawChart('aq-chart-recall', sessions, 'recall', '#00d97e', '%');
+}
+
+function aqDrawChart(canvasId, sessions, key, color, unit) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.offsetWidth || 560, h = 140;
+  canvas.width = w; canvas.height = h;
+  ctx.clearRect(0, 0, w, h);
+  if (sessions.length < 2) {
+    ctx.fillStyle = '#4a4f6a'; ctx.font = '12px Cairo,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('سجّل مزيدًا من الجلسات لرؤية الرسم البياني', w / 2, h / 2); return;
+  }
+  const vals = sessions.map(s => s[key]);
+  const minV = Math.max(0, Math.min(...vals) - 10), maxV = Math.min(100, Math.max(...vals) + 10);
+  const pad = { t: 15, r: 14, b: 26, l: 34 }, cw = w - pad.l - pad.r, ch = h - pad.t - pad.b;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (ch / 4) * i;
+    ctx.strokeStyle = '#1e2235'; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+    ctx.fillStyle = '#4a4f6a'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxV - (maxV - minV) * (i / 4)) + unit, pad.l - 4, y + 3);
+  }
+  ctx.setLineDash([]);
+  const grad = ctx.createLinearGradient(0, pad.t, 0, pad.t + ch);
+  grad.addColorStop(0, color + '33'); grad.addColorStop(1, color + '00');
+  const pts = sessions.map((s, i) => ({ x: pad.l + (i / (sessions.length - 1)) * cw, y: pad.t + (1 - (s[key] - minV) / (maxV - minV)) * ch }));
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pad.t + ch); pts.forEach(p => ctx.lineTo(p.x, p.y)); ctx.lineTo(pts[pts.length - 1].x, pad.t + ch); ctx.closePath(); ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = 2.5; ctx.lineJoin = 'round'; pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y)); ctx.stroke();
+  pts.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, 3.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill(); ctx.strokeStyle = '#07080f'; ctx.lineWidth = 1.5; ctx.stroke(); });
+  const step = sessions.length <= 7 ? 1 : Math.ceil(sessions.length / 5);
+  pts.forEach((p, i) => {
+    if (i % step !== 0 && i !== sessions.length - 1) return;
+    const d = new Date(sessions[i].date), label = (d.getMonth() + 1) + '/' + d.getDate();
+    ctx.fillStyle = '#4a4f6a'; ctx.font = '9px JetBrains Mono,monospace'; ctx.textAlign = 'center'; ctx.fillText(label, p.x, h - 5);
+  });
+}
+
+// ── SRS ──
+function aqRenderSRS() {
+  const list = document.getElementById('aq-srs-list');
+  if (!list) return;
+  const today = new Date(), queue = AQ.srsQueue.filter(r => !r.done);
+  if (!queue.length) { list.innerHTML = '<div class="aq-empty"><div class="aq-empty-icon">📭</div>لا توجد جلسات في القائمة بعد.<br>حدّد جلسات للمراجعة عند التسجيل.</div>'; return; }
+  queue.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  list.innerHTML = queue.map(r => {
+    const due = new Date(r.dueDate), diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    let dc, dt;
+    if (diff <= 0) { dc = 'aq-due-now'; dt = '🔴 مستحقة الآن'; }
+    else if (diff <= 1) { dc = 'aq-due-soon'; dt = '🟡 مستحقة غدًا'; }
+    else { dc = 'aq-due-later'; dt = `📅 بعد ${diff} أيام`; }
+    return `<div class="aq-review-item">
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">${aqEsc(r.name)}</div>
+        <div style="font-size:10px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${r.label} · ${new Date(r.date).toLocaleDateString()}</div>
+      </div>
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;">
+        <span class="aq-review-due ${dc}">${dt}</span>
+        <button class="aq-btn-secondary" style="padding:4px 10px;font-size:11px;" onclick="aqMarkSRSDone('${r.sessionId}','${r.label}')">✓ تمت</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function aqMarkSRSDone(sessionId, label) {
+  const idx = AQ.srsQueue.findIndex(r => r.sessionId == sessionId && r.label === label);
+  if (idx !== -1) AQ.srsQueue[idx].done = true;
+  aqSave(); aqRenderSRS(); aqShowToast('🧠', 'تمت المراجعة بنجاح!');
+}
+
+// ── History ──
+function aqRenderHistory() {
+  const list = document.getElementById('aq-history-list');
+  if (!list) return;
+  if (!AQ.sessions.length) { list.innerHTML = '<div class="aq-empty"><div class="aq-empty-icon">📂</div>لا توجد جلسات مسجّلة بعد.<br>ابدأ بتسجيل أول جلسة!</div>'; return; }
+  list.innerHTML = AQ.sessions.map(s => {
+    const d = new Date(s.date);
+    const dateStr = d.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
+    return `<div class="aq-session-item">
+      <div class="aq-session-date">${dateStr}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:5px;">${aqEsc(s.name)}</div>
+        <div class="aq-session-metrics">
+          <div class="aq-session-metric"><span class="aq-session-metric-label">الفهم</span><span class="aq-session-metric-value aq-accent-cyan">${s.understanding}%</span></div>
+          <div class="aq-session-metric"><span class="aq-session-metric-label">الاسترجاع</span><span class="aq-session-metric-value aq-accent-green">${s.recall}%</span></div>
+          <div class="aq-session-metric"><span class="aq-session-metric-label">السرعة</span><span class="aq-session-metric-value aq-accent-yellow">${s.speed}/10</span></div>
+          <div class="aq-session-metric"><span class="aq-session-metric-label">الوقت</span><span class="aq-session-metric-value">${s.duration || 20}د</span></div>
+        </div>
+      </div>
+      <div class="aq-session-badges">
+        ${s.shadowed ? '<span class="aq-badge aq-badge-up">🎙</span>' : ''}
+        ${s.deliberate ? '<span class="aq-badge aq-badge-neutral">🔁</span>' : ''}
+        ${s.inputLevel === 'ideal' ? '<span class="aq-badge aq-badge-up">i+1</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Weekly Summary ──
+function aqOpenWeekly() {
+  const wk = aqGetThisWeek(AQ.sessions), pw = aqGetPrevWeek(AQ.sessions);
+  const tU = wk.length ? aqAvg(wk.map(s => s.understanding)) : null;
+  const pU = pw.length ? aqAvg(pw.map(s => s.understanding)) : null;
+  const tR = wk.length ? aqAvg(wk.map(s => s.recall)) : null;
+  const tS = wk.length ? aqAvg(wk.map(s => s.speed)) : null;
+  const sd = wk.filter(s => s.shadowed).length;
+  const dp = wk.length ? Math.round(wk.filter(s => s.deliberate).length / wk.length * 100) : 0;
+  const diff = (tU !== null && pU !== null) ? Math.round(tU - pU) : null;
+  let str = [], wk2 = [];
+  if (tR > 65) str.push(`استرجاع فعّال قوي (${Math.round(tR)}٪)`); else if (tR !== null) wk2.push('الاسترجاع منخفض — جرّب التلخيص النشط');
+  if (sd >= 4) str.push(`محاكاة منتظمة (${sd} أيام)`); else wk2.push(`زِد المحاكاة — فقط ${sd} أيام هذا الأسبوع`);
+  if (dp >= 60) str.push(`تمرين متعمّد جيد (${dp}٪)`); else wk2.push('مارس إعادة الأجزاء الصعبة أكثر');
+  if (tS !== null && tS >= 7) str.push(`راحة عالية في السرعة (${Math.round(tS)}/10)`); else if (tS !== null && tS < 5) wk2.push('راحة السرعة منخفضة — جرّب محتوى بسرعة أصيل');
+  document.getElementById('aq-weekly-modal-content').innerHTML = `
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">جلسات هذا الأسبوع</span><span class="aq-weekly-stat-value aq-accent-cyan">${wk.length}</span></div>
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">متوسط الفهم</span><span class="aq-weekly-stat-value aq-accent-cyan">${tU !== null ? Math.round(tU) + '%' : '—'}</span></div>
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">مقارنة بالأسبوع الماضي</span><span class="aq-weekly-stat-value" style="color:${diff === null ? 'var(--muted)' : diff >= 0 ? 'var(--green)' : 'var(--red)'}">${diff === null ? '—' : (diff >= 0 ? '+' : '') + diff + '%'}</span></div>
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">متوسط الاسترجاع</span><span class="aq-weekly-stat-value aq-accent-green">${tR !== null ? Math.round(tR) + '%' : '—'}</span></div>
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">أيام المحاكاة</span><span class="aq-weekly-stat-value aq-accent-purple">${sd}/7</span></div>
+    <div class="aq-weekly-stat"><span class="aq-weekly-stat-label">التمرين المتعمّد</span><span class="aq-weekly-stat-value" style="color:var(--yellow)">${dp}%</span></div>
+    ${str.length ? `<div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--green);">✅ نقاط القوة</div>${str.map(s => `<div style="font-size:13px;color:var(--text);padding:5px 0;border-bottom:1px solid var(--border);">${s}</div>`).join('')}` : ''}
+    ${wk2.length ? `<div style="margin-top:14px;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--yellow);">⚠️ مجالات التحسين</div>${wk2.map(s => `<div style="font-size:13px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border);">${s}</div>`).join('')}` : ''}
+    ${!wk.length ? '<div style="text-align:center;color:var(--muted);font-size:13px;padding:16px 0;">لا توجد جلسات هذا الأسبوع بعد. ابدأ التسجيل!</div>' : ''}
+  `;
+  document.getElementById('aq-weekly-modal').classList.add('show');
+}
+
+// ── Replay Test ──
+function aqReplayTest() {
+  if (!AQ.sessions.length) { aqShowToast('📭', 'لا توجد جلسات للاسترجاع بعد'); return; }
+  const r = [...AQ.sessions].sort(() => Math.random() - .5).slice(0, 3);
+  document.getElementById('aq-replay-content').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7;">تحدّ نفسك: قبل الاطلاع على التفاصيل، حاول تذكّر محتوى هذه الجلسات من الذاكرة.</div>
+    ${r.map((s, i) => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;margin-bottom:8px;">
+      <div style="font-weight:700;margin-bottom:6px;">الجلسة ${i + 1}: ${aqEsc(s.name)}</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:6px;">${new Date(s.date).toLocaleDateString()}</div>
+      ${s.notes ? `<div style="font-size:12px;color:var(--muted);padding-top:6px;border-top:1px solid var(--border);">${aqEsc(s.notes)}</div>` : '<div style="font-size:12px;color:var(--muted);">لا توجد ملاحظات لهذه الجلسة.</div>'}
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="aq-badge aq-badge-neutral">الفهم: ${s.understanding}%</span>
+        <span class="aq-badge aq-badge-up">الاسترجاع: ${s.recall}%</span>
+        <span class="aq-badge aq-badge-neutral">السرعة: ${s.speed}/10</span>
+      </div>
+    </div>`).join('')}`;
+  document.getElementById('aq-replay-modal').classList.add('show');
+}
+
+// ── Modals & Toast ──
+function aqCloseModal(id) { document.getElementById(id).classList.remove('show'); }
+function aqShowToast(icon, text) {
+  const t = document.getElementById('aq-toast');
+  document.getElementById('aq-toast-icon').textContent = icon;
+  document.getElementById('aq-toast-text').textContent = text;
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+// ── Export ──
+function aqExportData() {
+  const blob = new Blob([JSON.stringify({ sessions: AQ.sessions, srsQueue: AQ.srsQueue }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'auraliq-data.json'; a.click();
+  aqShowToast('⬇', 'تم تصدير البيانات!');
+}
+
+// ── Helpers ──
+function aqAvg(arr) { return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0; }
+function aqCalcStreak(sessions, dateKey) {
+  if (!sessions.length) return 0;
+  const ud = [...new Set(sessions.map(dateKey))].sort((a, b) => new Date(b) - new Date(a));
+  const today = new Date().toDateString(), yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (ud[0] !== today && ud[0] !== yesterday) return 0;
+  let s = 1;
+  for (let i = 1; i < ud.length; i++) { if (Math.round((new Date(ud[i - 1]) - new Date(ud[i])) / 86400000) === 1) s++; else break; }
+  return s;
+}
+function aqGetThisWeek(sessions) {
+  const now = new Date(), sw = new Date(now); sw.setDate(now.getDate() - now.getDay()); sw.setHours(0, 0, 0, 0);
+  return sessions.filter(s => new Date(s.date) >= sw);
+}
+function aqGetPrevWeek(sessions) {
+  const now = new Date(), sw = new Date(now); sw.setDate(now.getDate() - now.getDay()); sw.setHours(0, 0, 0, 0);
+  const pw = new Date(sw); pw.setDate(pw.getDate() - 7);
+  return sessions.filter(s => { const d = new Date(s.date); return d >= pw && d < sw; });
+}
+function aqEsc(str) { return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function aqSetEl(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+function aqGetEl(id) { return document.getElementById(id); }
+
+// ── Resize ──
+window.addEventListener('resize', () => {
+  const prog = document.getElementById('aq-panel-progress');
+  if (prog && prog.classList.contains('active')) setTimeout(aqRenderCharts, 100);
+});
+
+// ── Close modals on overlay click ──
+['aq-weekly-modal','aq-replay-modal'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
+});
+</script>
+</body>
+</html>
