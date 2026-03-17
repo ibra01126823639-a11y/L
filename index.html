@@ -1129,7 +1129,7 @@ function removeBook(i) {
 
 // ── Gemini API ────────────────────────────────────────────
 const GEMINI_KEY = 'AIzaSyAt3E9QJDNuclt_LUsHiLYXMnna447Btmc';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
 
 async function callGemini(prompt) {
   let res;
